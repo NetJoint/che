@@ -23,6 +23,8 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.ide.api.project.node.HasStorablePath;
 import org.eclipse.che.ide.api.project.node.Node;
 import org.eclipse.che.ide.api.project.node.interceptor.NodeInterceptor;
@@ -38,7 +40,9 @@ import org.eclipse.che.ide.ui.window.Window;
 
 import javax.validation.constraints.NotNull;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -128,18 +132,84 @@ public class ChangedListViewImpl extends Window implements ChangedListView {
     public void setChanges(@NotNull Map<String, String> files) {
         tree.getNodeStorage().clear();
 
-        for (String item : files.keySet()) {
-            tree.getNodeStorage().add(new ChangedNode(item, files.get(item)) {
+
+        List<Node> childNodes = new ArrayList<>();
+        List<String> paths = new ArrayList<>(files.keySet());
+
+
+        String commonPath = commonPath(paths);
+        for (String item : paths) {
+            Node childNode = new ChangedNode(item.replace(commonPath, ""), files.get(item)) {
                 @Override
                 public void actionPerformed() {
                     delegate.onCompareClicked();
                 }
-            });
+            };
+            childNodes.add(childNode);
         }
+
+        Node folder = new FolderNode(commonPath(paths));
+        folder.setChildren(childNodes);
+
+        tree.getNodeStorage().add(folder);
 
         if (this.tree.getSelectionModel().getSelectedNodes() == null) {
             delegate.onNodeUnselected();
         }
+    }
+
+    private Node node(List<String> paths) {
+        String commonPath = commonPath(paths);
+        List<Node> childNodes = new ArrayList<>();
+        List<String> otherPaths = new ArrayList<>();
+        Node parentNode = new FolderNode(commonPath);
+        for (String item : paths) {
+            String path = item.replace(commonPath, "");
+            if (path.contains("/")) {
+                otherPaths.add(path);
+            } else {
+                Node childNode = new ChangedNode(item.replace(commonPath, ""), "") {
+                    @Override
+                    public void actionPerformed() {
+                        delegate.onCompareClicked();
+                    }
+                };
+                childNodes.add(childNode);
+            }
+        }
+
+        if (!otherPaths.isEmpty()) {
+            parentNode.setChildren(Collections.singletonList(node(otherPaths)));
+            parentNode.setChildren(childNodes);
+        }
+
+        return parentNode;
+    }
+
+    private static String commonPath(List<String> paths){
+        String commonPath = "";
+        String[][] folders = new String[paths.size()][];
+        for(int i = 0; i < paths.size(); i++){
+            folders[i] = paths.get(i).split("/"); //split on file separator
+        }
+        for(int j = 0; j < folders[0].length; j++){
+            String thisFolder = folders[0][j]; //grab the next folder name in the first path
+            boolean allMatched = true; //assume all have matched in case there are no more paths
+            for(int i = 1; i < folders.length && allMatched; i++){ //look at the other paths
+                if(folders[i].length < j){ //if there is no folder here
+                    allMatched = false; //no match
+                    break; //stop looking because we've gone as far as we can
+                }
+                //otherwise
+                allMatched &= folders[i][j].equals(thisFolder); //check if it matched
+            }
+            if(allMatched){ //if they all matched this folder name
+                commonPath += thisFolder + "/"; //add it to the answer
+            }else{//otherwise
+                break;//stop looking
+            }
+        }
+        return commonPath;
     }
 
     /** {@inheritDoc} */
