@@ -70,6 +70,10 @@ public class ChangedNode extends AbstractTreeNode implements HasPresentation, Ha
         return true;
     }
 
+    public void setPath(String path) {
+
+    }
+
     @Override
     public void updatePresentation(@NotNull NodePresentation presentation) {
         presentation.setPresentableText(name);
