@@ -23,6 +23,8 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.eclipse.che.api.promises.client.Operation;
+import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.ide.api.project.node.HasStorablePath;
 import org.eclipse.che.ide.api.project.node.Node;
 import org.eclipse.che.ide.api.project.node.interceptor.NodeInterceptor;
@@ -41,8 +43,10 @@ import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Implementation of {@link ChangedListView}.
@@ -134,32 +138,31 @@ public class ChangedListViewImpl extends Window implements ChangedListView {
 
         List<Node> childNodes = new ArrayList<>();
         List<String> items = new ArrayList<>(files.keySet());
-        List<String> folders = new ArrayList<>();
 
-        Map<String, List<Node>> map = new HashMap<>();
-
-        for (String item : items) {
-            String path = item.substring(0, item.lastIndexOf("/"));
-            Node file = new ChangedNode(item.substring(item.lastIndexOf("/") + 1), "");
-            if (map.keySet().contains(path)) {
-                map.get(path).add(file);
-            } else {
-                List<Node> nodes = new ArrayList<>();
-                nodes.add(file);
-                map.put(path, nodes);
-            }
-        }
-
-        while (!map.isEmpty()) {
-            for (String path : map.keySet()) {
-                if (shouldBeAFolder(items, path) && !folders.contains(path)) {
-                    Node folder = new FolderNode(path);
-                    folders.add(path);
-                    childNodes.add(folder);
+        Map<String, Node> nodes = new HashMap<>();
+        for (int i = getMaxNestedLevel(items); i > 0; i--) {
+            Map<String, List<Node>> nodeFiles = new HashMap<>();
+            for (String item : items) {
+                if (item.split("/").length != i) {
+                    continue;
+                }
+                String path = item.substring(0, item.lastIndexOf("/"));
+                Node file = new ChangedNode(item.substring(item.lastIndexOf("/") + 1), "");
+                if (nodeFiles.keySet().contains(path)) {
+                    nodeFiles.get(path).add(file);
                 } else {
-                    
+                    List<Node> listFiles = new ArrayList<>();
+                    listFiles.add(file);
+                    nodeFiles.put(path, listFiles);
                 }
             }
+            for (String item : nodeFiles.keySet()) {
+                String folderName = item.split("/")[i-1];
+                Node folder = new FolderNode(folderName);
+                folder.setChildren(nodeFiles.get(item));
+                nodes.put(item, folder);
+            }
+            String s = "";
         }
 
         Node lastNode = null;
@@ -185,25 +188,13 @@ public class ChangedListViewImpl extends Window implements ChangedListView {
 //        }
     }
 
-
-
-    private boolean shouldBeAFolder(List<String> paths, String item) {
-        List<String> mathes = new ArrayList<>();
-        for (String path : paths) {
-            if (path.contains(item)) {
-                mathes.add(path);
-            }
+    private int getMaxNestedLevel(List<String> items) {
+        int level = 0;
+        for (String item : items) {
+            int currentLevel = item.split("/").length;
+            level = currentLevel > level ? currentLevel : level;
         }
-        return mathes.size() > 1;
-    }
-
-    private String getnestedFolder(List<String> paths, String item) {
-        for (String path : paths) {
-            if (item.startsWith(path)) {
-                return path;
-            }
-        }
-        return "";
+        return level;
     }
 
     /** {@inheritDoc} */
