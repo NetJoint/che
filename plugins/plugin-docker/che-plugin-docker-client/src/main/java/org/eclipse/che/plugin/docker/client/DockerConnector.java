@@ -276,11 +276,11 @@ public class DockerConnector {
         doTag(image, repository, tag, dockerDaemonUri);
     }
 
-    public void push(String repository,
-                     String tag,
-                     String registry,
-                     final ProgressMonitor progressMonitor) throws IOException, InterruptedException {
-        doPush(repository, tag, registry, progressMonitor, dockerDaemonUri);
+    public String push(String repository,
+                       String tag,
+                       String registry,
+                       final ProgressMonitor progressMonitor) throws IOException, InterruptedException {
+        return doPush(repository, tag, registry, progressMonitor, dockerDaemonUri);
     }
 
     /**
@@ -932,23 +932,28 @@ public class DockerConnector {
         }
     }
 
-    protected void doPush(final String repository,
-                          final String tag,
-                          final String registry,
-                          final ProgressMonitor progressMonitor,
-                          final URI dockerDaemonUri) throws IOException, InterruptedException {
+    protected String doPush(final String repository,
+                            final String tag,
+                            final String registry,
+                            final ProgressMonitor progressMonitor,
+                            final URI dockerDaemonUri) throws IOException, InterruptedException {
         final List<Pair<String, ?>> headers = new ArrayList<>(3);
         headers.add(Pair.of("Content-Type", MediaType.TEXT_PLAIN));
         headers.add(Pair.of("Content-Length", 0));
         headers.add(Pair.of("X-Registry-Auth", initialAuthConfig.getAuthConfigHeader()));
         final String fullRepo = registry != null ? registry + "/" + repository : repository;
+        final ValueHolder<String> digestHolder = new ValueHolder<>();
 
         try (DockerConnection connection = connectionFactory.openConnection(dockerDaemonUri)
                                                             .method("POST")
                                                             .path("/images/" + fullRepo + "/push")
                                                             .headers(headers)) {
+            final String snapshotTag;
             if (tag != null) {
                 connection.query("tag", tag);
+                snapshotTag = tag;
+            } else {
+                snapshotTag = "latest";
             }
             final DockerResponse response = connection.request();
             final int status = response.getStatus();
@@ -970,11 +975,19 @@ public class DockerConnector {
                     @Override
                     public void run() {
                         try {
+                            String digestPrefix = snapshotTag + ": digest: ";
                             ProgressStatus progressStatus;
                             while ((progressStatus = progressReader.next()) != null && exceptionHolder.get() == null) {
                                 progressMonitor.updateProgress(progressStatus);
                                 if (progressStatus.getError() != null) {
                                     exceptionHolder.set(progressStatus.getError());
+                                }
+                                String status = progressStatus.getStatus();
+                                if (status != null) {
+                                    if (status.startsWith(digestPrefix)) {
+                                        String digest = status.substring(digestPrefix.length(), status.indexOf(" ", digestPrefix.length()));
+                                        digestHolder.set(digest);
+                                    }
                                 }
                             }
                         } catch (IOException e) {
@@ -999,6 +1012,7 @@ public class DockerConnector {
                 }
             }
         }
+        return digestHolder.get();
     }
 
     protected String doCommit(String container,

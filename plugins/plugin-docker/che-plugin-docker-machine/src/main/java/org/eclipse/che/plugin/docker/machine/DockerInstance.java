@@ -45,6 +45,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.String.format;
+import static org.eclipse.che.plugin.docker.machine.DockerInstanceKey.ID;
 
 /**
  * Docker implementation of {@link Instance}
@@ -199,13 +200,16 @@ public class DockerInstance extends AbstractInstance {
             Thread.sleep(2000);
 
             final ProgressLineFormatterImpl progressLineFormatter = new ProgressLineFormatterImpl();
-            docker.push(repository, null, registry, currentProgressStatus -> {
+            String digest = docker.push(repository, null, registry, currentProgressStatus -> {
                 try {
                     outputConsumer.writeLine(progressLineFormatter.format(currentProgressStatus));
                 } catch (IOException ignored) {
                 }
             });
-            return new DockerInstanceKey(repository, registry);
+
+            docker.removeImage(registry + "/" + repository, false);
+
+            return new DockerInstanceKey(repository, registry, digest);
         } catch (IOException e) {
             throw new MachineException(e);
         } catch (InterruptedException e) {
