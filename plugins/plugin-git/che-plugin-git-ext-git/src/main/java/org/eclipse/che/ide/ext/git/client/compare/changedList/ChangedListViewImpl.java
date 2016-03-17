@@ -132,18 +132,23 @@ public class ChangedListViewImpl extends Window implements ChangedListView {
 
     /** {@inheritDoc} */
     @Override
-    public void setChanges(@NotNull Map<String, String> files) {
+    public void setChanges(@NotNull Map<String, String> items) {
         tree.getNodeStorage().clear();
 
 
-
-        List<String> items = new ArrayList<>(files.keySet());
-        Map<String, List<Node>> childNodes = new HashMap<>();
+        List<String> files = new ArrayList<>(items.keySet());
+        List<String> paths = new ArrayList<>();
+        for (String file : files) {
+            String path = file.substring(0, file.lastIndexOf("/"));
+            if (!paths.contains(path)) {
+                paths.add(path);
+            }
+        }
 
         Map<String, Node> nodes = new HashMap<>();
-        for (int i = getMaxNestedLevel(items); i > 0; i--) {
+        for (int i = getMaxNestedLevel(files); i > 0; i--) {
             Map<String, List<Node>> nodeFiles = new HashMap<>();
-            for (String item : items) {
+            for (String item : files) {
                 if (item.split("/").length != i) {
                     continue;
                 }
@@ -157,10 +162,10 @@ public class ChangedListViewImpl extends Window implements ChangedListView {
                     nodeFiles.put(path, listFiles);
                 }
             }
-            for (String item : nodeFiles.keySet()) {
-                Node folder = new FolderNode(getFolderName(items, item));
-                folder.setChildren(nodeFiles.get(item));
-                nodes.put(item, folder);
+            for (String path : nodeFiles.keySet()) {
+                Node folder = new FolderNode(getFolderName(paths, path));
+                folder.setChildren(nodeFiles.get(path));
+                nodes.put(path, folder);
             }
             List<String> keySet = new ArrayList<>(nodes.keySet());
             for (String item : keySet) {
@@ -175,7 +180,6 @@ public class ChangedListViewImpl extends Window implements ChangedListView {
                     nodes.get(item).setChildren(toAdd);
                 }
             }
-            String s = "";
         }
 
         Node lastNode = null;
@@ -190,33 +194,26 @@ public class ChangedListViewImpl extends Window implements ChangedListView {
 //            };
 //            childNodes.add(childNode);
 //        }
-//
-//        Node folder = new FolderNode("");
-//        folder.setChildren(childNodes);
-//
-//        tree.getNodeStorage().add(folder);
-//
-//        if (this.tree.getSelectionModel().getSelectedNodes() == null) {
-//            delegate.onNodeUnselected();
-//        }
+
+        tree.getNodeStorage().add(Collections.singletonList(nodes.get("")));
+
+        if (this.tree.getSelectionModel().getSelectedNodes() == null) {
+            delegate.onNodeUnselected();
+        }
     }
     
-    private String getFolderName(List<String> files, String item) {
-        for (String file : files) {
-            
-        }
-        for (String file : files) {
-            if (file.startsWith(item) && files.indexOf(file) == 0) {
-                return item;
-            }
-            if (file.startsWith(item)) {
-                String previousFile = files.get(files.indexOf(file)-1);
-                String previousFolder = previousFile.substring(0, previousFile.lastIndexOf("/"));
-                String folder = file.replace(previousFolder + "/", "");
-                return folder.substring(0, folder.lastIndexOf("/"));
+    private String getFolderName(List<String> paths, String comparedPath) {
+        String[] segments = comparedPath.split("/");
+        String trimedPath = comparedPath;
+        for (int i = segments.length; i>0; i--) {
+            trimedPath = trimedPath.replace("/" + segments[i-1], "");
+            for (String path : paths) {
+                if (path.equals(trimedPath)) {
+                    return comparedPath.replace(trimedPath + "/", "");
+                }
             }
         }
-        return "";
+        return comparedPath;
     }
 
     private int getMaxNestedLevel(List<String> items) {
