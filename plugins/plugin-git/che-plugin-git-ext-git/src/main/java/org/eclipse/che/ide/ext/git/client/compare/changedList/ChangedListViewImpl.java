@@ -136,8 +136,9 @@ public class ChangedListViewImpl extends Window implements ChangedListView {
         tree.getNodeStorage().clear();
 
 
-        List<Node> childNodes = new ArrayList<>();
+
         List<String> items = new ArrayList<>(files.keySet());
+        Map<String, List<Node>> childNodes = new HashMap<>();
 
         Map<String, Node> nodes = new HashMap<>();
         for (int i = getMaxNestedLevel(items); i > 0; i--) {
@@ -157,10 +158,22 @@ public class ChangedListViewImpl extends Window implements ChangedListView {
                 }
             }
             for (String item : nodeFiles.keySet()) {
-                String folderName = item.split("/")[i-1];
-                Node folder = new FolderNode(folderName);
+                Node folder = new FolderNode(getFolderName(items, item));
                 folder.setChildren(nodeFiles.get(item));
                 nodes.put(item, folder);
+            }
+            List<String> keySet = new ArrayList<>(nodes.keySet());
+            for (String item : keySet) {
+                List<Node> toAdd = new ArrayList<>();
+                for (String nestedItem : keySet) {
+                    if (!item.equals(nestedItem) && nestedItem.startsWith(item)) {
+                        toAdd.add(nodes.remove(nestedItem));
+                    }    
+                }
+                if (!toAdd.isEmpty()) {
+                    toAdd.addAll(nodeFiles.get(item));
+                    nodes.get(item).setChildren(toAdd);
+                }
             }
             String s = "";
         }
@@ -186,6 +199,24 @@ public class ChangedListViewImpl extends Window implements ChangedListView {
 //        if (this.tree.getSelectionModel().getSelectedNodes() == null) {
 //            delegate.onNodeUnselected();
 //        }
+    }
+    
+    private String getFolderName(List<String> files, String item) {
+        for (String file : files) {
+            
+        }
+        for (String file : files) {
+            if (file.startsWith(item) && files.indexOf(file) == 0) {
+                return item;
+            }
+            if (file.startsWith(item)) {
+                String previousFile = files.get(files.indexOf(file)-1);
+                String previousFolder = previousFile.substring(0, previousFile.lastIndexOf("/"));
+                String folder = file.replace(previousFolder + "/", "");
+                return folder.substring(0, folder.lastIndexOf("/"));
+            }
+        }
+        return "";
     }
 
     private int getMaxNestedLevel(List<String> items) {
