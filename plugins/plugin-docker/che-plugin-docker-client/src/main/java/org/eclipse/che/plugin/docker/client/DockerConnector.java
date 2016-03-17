@@ -948,12 +948,8 @@ public class DockerConnector {
                                                             .method("POST")
                                                             .path("/images/" + fullRepo + "/push")
                                                             .headers(headers)) {
-            final String snapshotTag;
             if (tag != null) {
                 connection.query("tag", tag);
-                snapshotTag = tag;
-            } else {
-                snapshotTag = "latest";
             }
             final DockerResponse response = connection.request();
             final int status = response.getStatus();
@@ -975,7 +971,7 @@ public class DockerConnector {
                     @Override
                     public void run() {
                         try {
-                            String digestPrefix = snapshotTag + ": digest: ";
+                            String digestPrefix = (tag != null ? tag : "latest") + ": digest: ";
                             ProgressStatus progressStatus;
                             while ((progressStatus = progressReader.next()) != null && exceptionHolder.get() == null) {
                                 progressMonitor.updateProgress(progressStatus);
