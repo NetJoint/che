@@ -59,11 +59,4 @@ public interface WorkspaceConfig {
      * Workspace must contain at least 1 default environment and may contain N environments
      */
     List<? extends Environment> getEnvironments();
-
-    /**
-     * Returns workspace attributes, if workspace doesn't have any attributes empty map will be returned.
-     * Workspace attribute is an additional information about workspace which may be stored as key-value.
-     * It is optional, workspace may contain 0 or N attributes
-     */
-    Map<String, String> getAttributes();
 }
