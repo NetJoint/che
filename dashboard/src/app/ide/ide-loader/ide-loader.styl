@@ -36,11 +36,19 @@ ide-loader#ide-loader.ng-hide
   margin-top 20px
   margin-right 35px
 
-@media (min-width:959px) and (max-width:1599px)
+@media (min-height: 800px) and (max-height: 959px) and (min-width: 1600px), (min-height: 960px) and (min-width: 960px) and (max-width: 1599px)
   .ide-loader-back-link
-    margin-left 75px
+    margin-left 90px
 
-@media (max-width:959px)
+@media (min-height: 720px) and (max-height: 799px), (min-height: 800px) and (max-height: 959px) and (min-width: 960px) and (max-width: 1599px)
+  .ide-loader-back-link
+    margin-left 80px
+
+@media (max-height: 719px)
+  .ide-loader-back-link
+    margin-left 70px
+
+@media (max-width:959px), (orientation: portrait)
   .ide-loader-back-link
     margin-left 8px
   .ide-loader-download-link
