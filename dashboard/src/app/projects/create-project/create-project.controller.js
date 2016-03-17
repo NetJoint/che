@@ -1151,4 +1151,7 @@ export class CreateProjectCtrl {
     this.importProjectData.project.description = this.projectDescription;
   }
 
+  downloadLogs() {
+    window.open('data:text/csv,' + encodeURIComponent(this.getCreationSteps()[this.getCurrentProgressStep()].logs));
+  }
 }

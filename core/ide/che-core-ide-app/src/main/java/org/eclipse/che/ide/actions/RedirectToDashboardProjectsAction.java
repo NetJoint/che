@@ -10,33 +10,36 @@
  *******************************************************************************/
 package org.eclipse.che.ide.actions;
 
+import com.google.gwt.user.client.Window;
 import com.google.inject.Inject;
 
+import org.eclipse.che.api.analytics.client.logger.AnalyticsEventLogger;
 import org.eclipse.che.ide.CoreLocalizationConstant;
-import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.action.Action;
 import org.eclipse.che.ide.api.action.ActionEvent;
-import org.eclipse.che.ide.settings.SettingsPresenter;
 
 /**
- * The class describes action which shows widget for configuring java properties.
+ * Open a new dashboard window with information about the projects
  *
- * @author Dmitry Shnurenko
+ * @author Oleksii Orel
  */
-public class SettingsAction extends Action {
+public class RedirectToDashboardProjectsAction extends Action {
 
-    private final SettingsPresenter presenter;
+    private static final String REDIRECT_URL = "/dashboard/#/projects";
+
+    private final AnalyticsEventLogger     eventLogger;
 
     @Inject
-    public SettingsAction(CoreLocalizationConstant locale, SettingsPresenter presenter, Resources resources) {
-        super(locale.projectSettingsTitle(), null, null, resources.settings());
-
-        this.presenter = presenter;
+    public RedirectToDashboardProjectsAction(CoreLocalizationConstant localization,
+                                             AnalyticsEventLogger eventLogger) {
+        super(localization.actionRedirectToDashboardProjectsTitle(), localization.actionRedirectToDashboardProjectsDescription(), null, null);
+        this.eventLogger = eventLogger;
     }
 
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        presenter.show();
+        eventLogger.log(this);
+        Window.open(REDIRECT_URL, "_blank", "");
     }
 }
