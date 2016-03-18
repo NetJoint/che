@@ -15,10 +15,12 @@ import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.ide.api.project.node.AbstractTreeNode;
 import org.eclipse.che.ide.api.project.node.HasAction;
 import org.eclipse.che.ide.api.project.node.Node;
+import org.eclipse.che.ide.project.shared.NodesResources;
 import org.eclipse.che.ide.ui.smartTree.presentation.HasPresentation;
 import org.eclipse.che.ide.ui.smartTree.presentation.NodePresentation;
 
 import javax.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -26,24 +28,32 @@ import java.util.List;
  *
  * @author Igor Vinokur
  */
-public class FolderNode extends AbstractTreeNode implements HasPresentation, HasAction {
+public class FileChangedNode extends AbstractTreeNode implements HasPresentation, HasAction {
 
     private String           name;
+    private String           path;
+    private String           state;
     private NodePresentation nodePresentation;
+
+    private final NodesResources nodesResources;
 
     /**
      * Create instance of ChangedNode.
      *
      * @param name
      *         name of the file that represents this node with its full path
+     * @param state
+     *         state of the file that represents this node
      */
-    public FolderNode(String name) {
+    public FileChangedNode(String name, String state, NodesResources nodesResources) {
         this.name = name;
+        this.state = state;
+        this.nodesResources = nodesResources;
     }
 
     @Override
     protected Promise<List<Node>> getChildrenImpl() {
-        return Promises.resolve(children);
+        return Promises.resolve(Collections.<Node>emptyList());
     }
 
     @Override
@@ -51,14 +61,34 @@ public class FolderNode extends AbstractTreeNode implements HasPresentation, Has
         return name;
     }
 
+    /**
+     * Represents state of the file, 'A' if added 'D' if deleted 'M' if modified, etc.
+     *
+     * @return state state of the node
+     */
+    public String getState() {
+        return state;
+    }
+
     @Override
     public boolean isLeaf() {
-        return false;
+        return true;
     }
 
     @Override
     public void updatePresentation(@NotNull NodePresentation presentation) {
         presentation.setPresentableText(name);
+        presentation.setPresentableIcon(nodesResources.file());
+
+        if (state.startsWith("M")) {
+            presentation.setPresentableTextCss("color: DodgerBlue ;");
+        } else if (state.startsWith("D")) {
+            presentation.setPresentableTextCss("color: red;");
+        } else if (state.startsWith("A")) {
+            presentation.setPresentableTextCss("color: green;");
+        } else if (state.startsWith("C")) {
+            presentation.setPresentableTextCss("color: purple;");
+        }
     }
 
     @Override
@@ -77,5 +107,13 @@ public class FolderNode extends AbstractTreeNode implements HasPresentation, Has
     @Override
     public void actionPerformed() {
 
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 }

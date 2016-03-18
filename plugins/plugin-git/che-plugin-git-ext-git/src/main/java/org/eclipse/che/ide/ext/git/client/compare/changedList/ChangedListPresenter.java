@@ -52,7 +52,7 @@ public class ChangedListPresenter implements ChangedListView.ActionDelegate {
      */
     public void show(Map<String, String> changedFiles, String revision) {
         view.showDialog();
-        view.setChanges(changedFiles);
+        view.setChanges(changedFiles, true);
         view.setEnableCompareButton(false);
         this.revision = revision;
     }
@@ -71,15 +71,21 @@ public class ChangedListPresenter implements ChangedListView.ActionDelegate {
 
     /** {@inheritDoc} */
     @Override
-    public void onNodeSelected(@NotNull Node node) {
-        view.setEnableCompareButton(true);
-        this.file = node.getName();
-        this.state = ((ChangedNode)node).getState();
+    public void onChangeViewClicked() {
+        view.changeView();
     }
 
     /** {@inheritDoc} */
     @Override
-    public void onNodeUnselected() {
+    public void onFileNodeSelected(@NotNull Node node) {
+        view.setEnableCompareButton(true);
+        this.file = node.getName();
+        this.state = ((FileChangedNode)node).getState();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void onFileNodeUnselected() {
         view.setEnableCompareButton(false);
     }
 }
