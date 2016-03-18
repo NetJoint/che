@@ -40,7 +40,7 @@ import org.eclipse.che.api.machine.shared.dto.SnapshotDto;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ProjectConfigImpl;
 import org.eclipse.che.api.workspace.server.model.impl.RuntimeWorkspaceImpl;
-import org.eclipse.che.api.workspace.server.model.impl.UsersWorkspaceImpl;
+import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.RuntimeWorkspaceDto;
@@ -168,7 +168,7 @@ public class WorkspaceService extends Service {
                                                                                                   ServerException,
                                                                                                   ForbiddenException,
                                                                                                   BadRequestException {
-        final UsersWorkspaceImpl workspace = workspaceManager.getWorkspace(id);
+        final WorkspaceImpl workspace = workspaceManager.getWorkspace(id);
         ensureUserIsWorkspaceOwner(workspace);
         return injectLinks(asDto(workspace));
     }
@@ -534,7 +534,7 @@ public class WorkspaceService extends Service {
                                                                       ConflictException,
                                                                       ForbiddenException {
         requiredNotNull(newCommand, "Command");
-        final UsersWorkspaceImpl workspace = workspaceManager.getWorkspace(id);
+        final WorkspaceImpl workspace = workspaceManager.getWorkspace(id);
         ensureUserIsWorkspaceOwner(workspace);
         workspace.getConfig().getCommands().add(new CommandImpl(newCommand));
         return injectLinks(asDto(workspaceManager.updateWorkspace(workspace.getId(), workspace.getConfig())));
@@ -562,7 +562,7 @@ public class WorkspaceService extends Service {
                                                                      ConflictException,
                                                                      ForbiddenException {
         requiredNotNull(update, "Command update");
-        final UsersWorkspaceImpl workspace = workspaceManager.getWorkspace(id);
+        final WorkspaceImpl workspace = workspaceManager.getWorkspace(id);
         ensureUserIsWorkspaceOwner(workspace);
         if (!workspace.getConfig().getCommands().removeIf(cmd -> cmd.getName().equals(update.getName()))) {
             throw new NotFoundException("Workspace " + id + " doesn't contain command " + update.getName());
@@ -590,7 +590,7 @@ public class WorkspaceService extends Service {
                                                          NotFoundException,
                                                          ConflictException,
                                                          ForbiddenException {
-        final UsersWorkspaceImpl workspace = workspaceManager.getWorkspace(id);
+        final WorkspaceImpl workspace = workspaceManager.getWorkspace(id);
         ensureUserIsWorkspaceOwner(workspace);
         if (workspace.getConfig().getCommands().removeIf(command -> command.getName().equals(commandName))) {
             workspaceManager.updateWorkspace(id, workspace.getConfig());
@@ -620,7 +620,7 @@ public class WorkspaceService extends Service {
                                                                                   ConflictException,
                                                                                   ForbiddenException {
         requiredNotNull(newEnvironment, "New environment");
-        final UsersWorkspaceImpl workspace = workspaceManager.getWorkspace(id);
+        final WorkspaceImpl workspace = workspaceManager.getWorkspace(id);
         ensureUserIsWorkspaceOwner(workspace);
         if (workspace.getConfig()
                      .getEnvironments()
@@ -654,7 +654,7 @@ public class WorkspaceService extends Service {
                                                                              ConflictException,
                                                                              ForbiddenException {
         requiredNotNull(update, "Environment description");
-        final UsersWorkspaceImpl workspace = workspaceManager.getWorkspace(id);
+        final WorkspaceImpl workspace = workspaceManager.getWorkspace(id);
         ensureUserIsWorkspaceOwner(workspace);
         if (!workspace.getConfig()
                       .getEnvironments()
@@ -685,7 +685,7 @@ public class WorkspaceService extends Service {
                                                          NotFoundException,
                                                          ConflictException,
                                                          ForbiddenException {
-        final UsersWorkspaceImpl workspace = workspaceManager.getWorkspace(id);
+        final WorkspaceImpl workspace = workspaceManager.getWorkspace(id);
         ensureUserIsWorkspaceOwner(workspace);
         Iterator<EnvironmentImpl> it = workspace.getConfig().getEnvironments().iterator();
         while (it.hasNext()) {
@@ -719,7 +719,7 @@ public class WorkspaceService extends Service {
                                                                             ConflictException,
                                                                             ForbiddenException {
         requiredNotNull(newProject, "New project config");
-        final UsersWorkspaceImpl workspace = workspaceManager.getWorkspace(id);
+        final WorkspaceImpl workspace = workspaceManager.getWorkspace(id);
         ensureUserIsWorkspaceOwner(workspace);
         workspace.getConfig().getProjects().add(new ProjectConfigImpl(newProject));
         return injectLinks(asDto(workspaceManager.updateWorkspace(id, workspace.getConfig())));
@@ -747,7 +747,7 @@ public class WorkspaceService extends Service {
                                                                            ConflictException,
                                                                            ForbiddenException {
         requiredNotNull(update, "Project config");
-        final UsersWorkspaceImpl workspace = workspaceManager.getWorkspace(id);
+        final WorkspaceImpl workspace = workspaceManager.getWorkspace(id);
         ensureUserIsWorkspaceOwner(workspace);
         if (!workspace.getConfig().getProjects().removeIf(project -> project.getName().equals(update.getName()))) {
             throw new NotFoundException("Workspace " + id + " doesn't contain project " + update.getName());
@@ -775,7 +775,7 @@ public class WorkspaceService extends Service {
                                                          NotFoundException,
                                                          ConflictException,
                                                          ForbiddenException {
-        final UsersWorkspaceImpl workspace = workspaceManager.getWorkspace(id);
+        final WorkspaceImpl workspace = workspaceManager.getWorkspace(id);
         ensureUserIsWorkspaceOwner(workspace);
         if (workspace.getConfig().getProjects().removeIf(project -> project.getName().equals(projectName))) {
             workspaceManager.updateWorkspace(id, workspace.getConfig());
@@ -831,7 +831,7 @@ public class WorkspaceService extends Service {
      */
     private void ensureUserIsWorkspaceOwner(String workspaceId)
             throws ServerException, BadRequestException, ForbiddenException, NotFoundException {
-        final UsersWorkspaceImpl workspace = workspaceManager.getWorkspace(workspaceId);
+        final WorkspaceImpl workspace = workspaceManager.getWorkspace(workspaceId);
         ensureUserIsWorkspaceOwner(workspace);
     }
 

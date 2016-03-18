@@ -39,7 +39,7 @@ import org.eclipse.che.api.user.server.dao.User;
 import org.eclipse.che.api.user.server.dao.UserDao;
 import org.eclipse.che.api.workspace.server.DtoConverter;
 import org.eclipse.che.api.workspace.server.WorkspaceManager;
-import org.eclipse.che.api.workspace.server.model.impl.UsersWorkspaceImpl;
+import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.api.workspace.shared.dto.UsersWorkspaceDto;
 import org.eclipse.che.commons.lang.NameGenerator;
 import org.eclipse.che.dto.server.DtoFactory;
@@ -611,7 +611,7 @@ public class AccountService extends Service {
     public AccountDescriptor unregisterWorkspace(@PathParam("accountId") String accountId, @PathParam("workspaceId") String workspaceId)
             throws NotFoundException, ServerException, BadRequestException, ConflictException {
         Account account = accountDao.getById(accountId);
-        UsersWorkspaceImpl workspace = workspaceManager.getWorkspace(workspaceId);
+        WorkspaceImpl workspace = workspaceManager.getWorkspace(workspaceId);
         if (!account.getWorkspaces().remove(workspace)) {
             throw new ConflictException(format("Workspace '%s' is not registered in account '%s'", workspaceId, accountId));
         }

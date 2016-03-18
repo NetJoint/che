@@ -28,7 +28,7 @@ import org.eclipse.che.api.machine.server.MachineManager;
 import org.eclipse.che.api.machine.server.impl.SnapshotImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
 import org.eclipse.che.api.workspace.server.model.impl.RuntimeWorkspaceImpl;
-import org.eclipse.che.api.workspace.server.model.impl.UsersWorkspaceImpl;
+import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.api.workspace.server.spi.WorkspaceDao;
 import org.eclipse.che.api.workspace.shared.dto.event.WorkspaceStatusEvent;
 import org.eclipse.che.api.workspace.shared.dto.event.WorkspaceStatusEvent.EventType;
@@ -125,12 +125,12 @@ public class WorkspaceManager {
      * @see WorkspaceHooks#beforeCreate(UsersWorkspace, String)
      * @see WorkspaceHooks#afterCreate(UsersWorkspace, String)
      */
-    public UsersWorkspaceImpl createWorkspace(WorkspaceConfig config, String owner, @Nullable String accountId) throws ForbiddenException,
-                                                                                                                       ServerException,
-                                                                                                                       BadRequestException,
-                                                                                                                       ConflictException,
-                                                                                                                       NotFoundException {
-        final UsersWorkspaceImpl newWorkspace = fromConfig(config, owner);
+    public WorkspaceImpl createWorkspace(WorkspaceConfig config, String owner, @Nullable String accountId) throws ForbiddenException,
+                                                                                                                  ServerException,
+                                                                                                                  BadRequestException,
+                                                                                                                  ConflictException,
+                                                                                                                  NotFoundException {
+        final WorkspaceImpl newWorkspace = fromConfig(config, owner);
 
         hooks.beforeCreate(newWorkspace, accountId);
         workspaceDao.create(newWorkspace);
@@ -160,7 +160,7 @@ public class WorkspaceManager {
      * @throws ServerException
      *         when any server error occurs
      */
-    public UsersWorkspaceImpl getWorkspace(String workspaceId) throws NotFoundException, ServerException, BadRequestException {
+    public WorkspaceImpl getWorkspace(String workspaceId) throws NotFoundException, ServerException, BadRequestException {
         requiredNotNull(workspaceId, "Required non-null workspace id");
         return normalizeState(workspaceDao.get(workspaceId));
     }
@@ -180,7 +180,7 @@ public class WorkspaceManager {
      * @throws NotFoundException
      * @throws ServerException
      */
-    public UsersWorkspaceImpl getWorkspace(String name, String owner) throws BadRequestException, NotFoundException, ServerException {
+    public WorkspaceImpl getWorkspace(String name, String owner) throws BadRequestException, NotFoundException, ServerException {
         requiredNotNull(name, "Required non-null workspace name");
         requiredNotNull(owner, "Required non-null workspace owner");
         return normalizeState(workspaceDao.get(name, owner));
@@ -201,14 +201,14 @@ public class WorkspaceManager {
      * @throws ServerException
      *         when any server error occurs while getting workspaces with {@link WorkspaceDao#getByOwner(String)}
      */
-    public List<UsersWorkspaceImpl> getWorkspaces(String owner) throws ServerException, BadRequestException {
+    public List<WorkspaceImpl> getWorkspaces(String owner) throws ServerException, BadRequestException {
         requiredNotNull(owner, "Required non-null workspace owner");
         final Map<String, RuntimeWorkspaceImpl> runtimeWorkspaces = new HashMap<>();
         for (RuntimeWorkspaceImpl runtimeWorkspace : workspaceRegistry.getByOwner(owner)) {
             runtimeWorkspaces.put(runtimeWorkspace.getId(), runtimeWorkspace);
         }
-        final List<UsersWorkspaceImpl> workspaces = workspaceDao.getByOwner(owner);
-        for (UsersWorkspaceImpl workspace : workspaces) {
+        final List<WorkspaceImpl> workspaces = workspaceDao.getByOwner(owner);
+        for (WorkspaceImpl workspace : workspaces) {
             normalizeState(workspace, runtimeWorkspaces.get(workspace.getId()));
         }
         return workspaces;
@@ -236,12 +236,12 @@ public class WorkspaceManager {
      * @throws ServerException
      *         when any other error occurs
      */
-    public UsersWorkspaceImpl updateWorkspace(String workspaceId, WorkspaceConfig updateConfig) throws ConflictException,
-                                                                                                       ServerException,
-                                                                                                       BadRequestException,
-                                                                                                       NotFoundException {
+    public WorkspaceImpl updateWorkspace(String workspaceId, WorkspaceConfig updateConfig) throws ConflictException,
+                                                                                                  ServerException,
+                                                                                                  BadRequestException,
+                                                                                                  NotFoundException {
         configValidator.validate(updateConfig);
-        final UsersWorkspaceImpl updated = workspaceDao.update(new UsersWorkspaceImpl(updateConfig, workspaceId, getCurrentUserId()));
+        final WorkspaceImpl updated = workspaceDao.update(new WorkspaceImpl(updateConfig, workspaceId, getCurrentUserId()));
         // TODO move 'analytics' logs to the appropriate interceptors
         LOG.info("EVENT#workspace-updated# WS#{}# WS-ID#{}#", updated.getConfig().getName(), updated.getId());
         return normalizeState(updated);
@@ -328,9 +328,9 @@ public class WorkspaceManager {
      * @see WorkspaceHooks#beforeStart(UsersWorkspace, String, String)
      * @see RuntimeWorkspaceRegistry#start(UsersWorkspace, String)
      */
-    public UsersWorkspaceImpl startWorkspaceById(String workspaceId,
-                                                 @Nullable String envName,
-                                                 @Nullable String accountId) throws NotFoundException,
+    public WorkspaceImpl startWorkspaceById(String workspaceId,
+                                            @Nullable String envName,
+                                            @Nullable String accountId) throws NotFoundException,
                                                                                     ServerException,
                                                                                     BadRequestException,
                                                                                     ForbiddenException,
@@ -364,10 +364,10 @@ public class WorkspaceManager {
      * @see WorkspaceHooks#beforeStart(UsersWorkspace, String, String)
      * @see RuntimeWorkspaceRegistry#start(UsersWorkspace, String)
      */
-    public UsersWorkspaceImpl startWorkspaceByName(String workspaceName,
-                                                   String owner,
-                                                   @Nullable String envName,
-                                                   @Nullable String accountId) throws NotFoundException,
+    public WorkspaceImpl startWorkspaceByName(String workspaceName,
+                                              String owner,
+                                              @Nullable String envName,
+                                              @Nullable String accountId) throws NotFoundException,
                                                                                       ServerException,
                                                                                       BadRequestException,
                                                                                       ForbiddenException,
@@ -406,7 +406,7 @@ public class WorkspaceManager {
                                                                                            NotFoundException,
                                                                                            ConflictException {
 
-        final UsersWorkspaceImpl workspace = fromConfig(workspaceConfig, getCurrentUserId());
+        final WorkspaceImpl workspace = fromConfig(workspaceConfig, getCurrentUserId());
         workspace.setTemporary(true);
         // Temporary workspace is not persistent one, which means
         // that it is created when runtime workspace instance created(workspace started)
@@ -444,9 +444,9 @@ public class WorkspaceManager {
      * @throws ForbiddenException
      *         when user doesn't have access to start the new workspace
      */
-    public UsersWorkspaceImpl recoverWorkspace(String workspaceId,
-                                               @Nullable String envName,
-                                               @Nullable String accountId) throws BadRequestException,
+    public WorkspaceImpl recoverWorkspace(String workspaceId,
+                                          @Nullable String envName,
+                                          @Nullable String accountId) throws BadRequestException,
                                                                                   NotFoundException,
                                                                                   ServerException,
                                                                                   ConflictException,
@@ -541,7 +541,7 @@ public class WorkspaceManager {
         return machineManager.getSnapshots(getCurrentUserId(), workspaceId);
     }
 
-    private UsersWorkspaceImpl normalizeState(UsersWorkspaceImpl workspace) {
+    private WorkspaceImpl normalizeState(WorkspaceImpl workspace) {
         try {
             return normalizeState(workspace, workspaceRegistry.get(workspace.getId()));
         } catch (NotFoundException e) {
@@ -549,33 +549,33 @@ public class WorkspaceManager {
         }
     }
 
-    private UsersWorkspaceImpl normalizeState(UsersWorkspaceImpl workspace, RuntimeWorkspaceImpl runtime) {
+    private WorkspaceImpl normalizeState(WorkspaceImpl workspace, RuntimeWorkspaceImpl runtime) {
         workspace.setTemporary(false);
         workspace.setStatus(runtime == null ? STOPPED : runtime.getStatus());
         return workspace;
     }
 
-    private UsersWorkspaceImpl fromConfig(WorkspaceConfig config, String owner) throws BadRequestException,
-                                                                                       ForbiddenException,
-                                                                                       ServerException {
+    private WorkspaceImpl fromConfig(WorkspaceConfig config, String owner) throws BadRequestException,
+                                                                                  ForbiddenException,
+                                                                                  ServerException {
         requiredNotNull(config, "Required non-null workspace configuration");
         requiredNotNull(owner, "Required non-null workspace owner");
         configValidator.validate(config);
-        return UsersWorkspaceImpl.builder()
-                                 .generateId()
-                                 .fromConfig(config)
-                                 .setOwner(owner)
-                                 .build();
+        return WorkspaceImpl.builder()
+                            .generateId()
+                            .fromConfig(config)
+                            .setNamespace(owner)
+                            .build();
     }
 
     /**
      * Asynchronously starts permanent(non-temporary) workspace.
      */
     @VisibleForTesting
-    UsersWorkspaceImpl performAsyncStart(UsersWorkspaceImpl workspace,
-                                         String envName,
-                                         boolean recover,
-                                         @Nullable String accountId) throws ConflictException,
+    WorkspaceImpl performAsyncStart(WorkspaceImpl workspace,
+                                    String envName,
+                                    boolean recover,
+                                    @Nullable String accountId) throws ConflictException,
                                                                             BadRequestException {
 
         // Runtime workspace registry performs this check as well
@@ -620,7 +620,7 @@ public class WorkspaceManager {
      * if any error occurs during workspace start.
      */
     @VisibleForTesting
-    RuntimeWorkspaceImpl performSyncStart(UsersWorkspaceImpl workspace,
+    RuntimeWorkspaceImpl performSyncStart(WorkspaceImpl workspace,
                                           String envName,
                                           boolean recover,
                                           @Nullable String accountId) throws ForbiddenException,

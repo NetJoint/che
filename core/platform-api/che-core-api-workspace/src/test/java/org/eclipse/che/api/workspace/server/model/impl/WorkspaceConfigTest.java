@@ -8,21 +8,11 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.workspace.server;
-
-import org.eclipse.che.api.core.ConflictException;
-import org.eclipse.che.api.core.rest.shared.dto.ServiceError;
+package org.eclipse.che.api.workspace.server.model.impl;
 
 /**
- * @author gazarenkov
+ * @author Yevhenii Voevodin
  */
-public class AlreadyExistException extends ConflictException {
+public class WorkspaceConfigTest {
 
-    public AlreadyExistException(String message) {
-        super(message);
-    }
-
-    public AlreadyExistException(ServiceError serviceError) {
-        super(serviceError);
-    }
 }

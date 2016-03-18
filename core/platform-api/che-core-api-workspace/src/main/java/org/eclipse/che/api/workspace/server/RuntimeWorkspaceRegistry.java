@@ -28,6 +28,7 @@ import org.eclipse.che.api.machine.server.exception.MachineException;
 import org.eclipse.che.api.machine.server.exception.SnapshotException;
 import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
 import org.eclipse.che.api.workspace.server.model.impl.RuntimeWorkspaceImpl;
+import org.eclipse.che.api.workspace.server.model.impl.WorkspaceRuntimeImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -203,7 +204,7 @@ public class RuntimeWorkspaceRegistry {
     public void stop(String workspaceId) throws NotFoundException, ServerException, ConflictException {
         checkRegistryIsNotStopped();
         lock.writeLock().lock();
-        final RuntimeWorkspaceImpl workspace;
+        final  workspace;
         try {
             checkRegistryIsNotStopped();
             workspace = idToWorkspaces.get(workspaceId);
@@ -464,24 +465,6 @@ public class RuntimeWorkspaceRegistry {
             machineManager.destroy(workspace.getDevMachine().getId(), false);
         } finally {
             doRemoveWorkspace(workspace.getId());
-        }
-    }
-
-    /**
-     * Removes all workspaces from the in-memory storage, while
-     * {@link MachineManager#cleanup()} is responsible for machines destroying.
-     */
-    @PreDestroy
-    @VisibleForTesting
-    void stopRegistry() {
-        isStopped = true;
-        lock.writeLock().lock();
-        try {
-            new ArrayList<>(idToWorkspaces.values()).stream()
-                                                    .map(UsersWorkspace::getId)
-                                                    .forEach(this::doRemoveWorkspace);
-        } finally {
-            lock.writeLock().unlock();
         }
     }
 }

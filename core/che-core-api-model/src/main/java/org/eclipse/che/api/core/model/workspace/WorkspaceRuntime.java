@@ -45,7 +45,6 @@ public interface WorkspaceRuntime {
 
     /**
      * Returns all the machines which are defined by the active environment.
-     * The list of machines is never empty and contains at least single dev-machine.
      */
     List<? extends Machine> getMachines();
 }

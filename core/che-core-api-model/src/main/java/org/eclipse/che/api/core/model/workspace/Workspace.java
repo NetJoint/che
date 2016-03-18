@@ -21,12 +21,10 @@ public interface Workspace {
     String getId();
 
     /**
-     * Returns the owner of the current workspace instance.
-     * The combination of owner and workspace name
-     * ({@code getConfig()}{@link WorkspaceConfig#getName() .getName()})
-     * is unique.
+     * Returns the namespace of the current workspace instance.
+     * Workspace name is unique for workspaces in the same namespace.
      */
-    String getOwner();
+    String getNamespace();
 
     /**
      * Returns the status of the current workspace instance.
