@@ -20,8 +20,9 @@ export class CheLoaderCrane {
    * Default constructor that is using resource
    * @ngInject for Dependency injection
    */
-  constructor($timeout) {
+  constructor($timeout, $window) {
     this.$timeout = $timeout;
+    this.$window = $window;
     this.restrict = 'E';
     this.replace = true;
     this.templateUrl = 'components/widget/loader/che-loader-crane.html';
@@ -31,7 +32,8 @@ export class CheLoaderCrane {
       step: '@cheStep',
       allSteps: '=cheAllSteps',
       excludeSteps: '=cheExcludeSteps',
-      switchOnIteration: '=?cheSwitchOnIteration'
+      switchOnIteration: '=?cheSwitchOnIteration',
+      inProgress: '=cheInProgress'
     };
   }
 
@@ -53,7 +55,7 @@ export class CheLoaderCrane {
         animationStopping = true;
 
         if (!$scope.switchOnIteration) {
-          // stop animation immediately if it shouldn't wait untill next iteration
+          // stop animation immediately if it shouldn't wait until next iteration
           setNoAnimation();
         }
       }
@@ -66,7 +68,7 @@ export class CheLoaderCrane {
       newStep = newVal;
 
       // go to next step
-      // if animation hasn't run yet or it shouldn't wait untill next iteration
+      // if animation hasn't run yet or it shouldn't wait until next iteration
       if (!animationRunning || !$scope.switchOnIteration) {
         setAnimation();
         setCurrentStep();
@@ -75,6 +77,42 @@ export class CheLoaderCrane {
       if (oldSteps.indexOf(newVal) === -1) {
         oldSteps.push(newVal);
       }
+    });
+
+    let destroyResizeEvent;
+    $scope.$watch(() => {
+      return $scope.inProgress;
+    }, (inProgress) => {
+      console.log('inProgress: ', inProgress);
+      // destroy event
+      if (!inProgress && typeof destroyResizeEvent === 'function') {
+        destroyResizeEvent();
+        return;
+      }
+
+      // initial resize
+      setCraneSize();
+
+      destroyResizeEvent = angular.element(this.$window).bind('resize', (event) => {
+        console.log('>>> window resize stopped with event: ', event);
+
+        setCraneSize();
+
+        // re-init all animations
+        // let animatedElements = element.find('.che-loader-animation'),
+        //   foundAnimations = [];
+        // for (let i=0; i<animatedElements.length; i++) {
+        //   let animationName = removeAnimation(animatedElements[i]);
+        //   foundAnimations.push([animatedElements[i],animationName]);
+        // }
+        //
+        // this.$timeout(() => {
+        //   for (let i=0; i<foundAnimations.length; i++) {
+        //     let pair = foundAnimations[i];
+        //     applyAnimation(pair[0], pair[1]);
+        //   }
+        // },0);
+      });
     });
 
     if (!!$scope.switchOnIteration) {
@@ -91,7 +129,53 @@ export class CheLoaderCrane {
       });
     }
 
-    let setAnimation = () => {
+    let setCraneSize = () => {
+        console.log('> trying to set crane size');
+
+        // check if parent container has scrollbar
+        let contentPage = angular.element('#create-project-content-page')[0],
+          scrollEl = element.find('.che-loader-crane-scale-wrapper'),
+          scale = 1,
+          scaleIncrement = 0.1,
+          height = craneEl.height(),
+          width = craneEl.width();
+        scrollEl.css('transform', 'scale3d('+scale+','+scale+','+scale+')');
+        scrollEl.css('height', height * scale);
+        scrollEl.css('width', width * scale);
+
+        let bodyEl = angular.element(document).find('body')[0];
+
+        while (((bodyEl && bodyEl.scrollHeight - bodyEl.offsetHeight > 10) || contentPage.scrollHeight > contentPage.offsetHeight) && scale > 0.7) {
+          scale = scale - scaleIncrement;
+          console.log('> page has scroll bar, apply scale ', scale);
+          scrollEl.css('transform', 'scale3d('+scale+','+scale+','+scale+')');
+          scrollEl.css('height', height * scale);
+          scrollEl.css('width', width * scale);
+        }
+
+        // parent container still has scroll
+        if (((bodyEl && bodyEl.scrollHeight - bodyEl.offsetHeight > 10) || contentPage.scrollHeight > contentPage.offsetHeight) && scale <= 0.7) {
+          console.log('hide parent element');
+          element.parent().css('display','none');
+        }
+        else {
+          console.log('show parent element');
+          element.parent().css('display','block');
+        }
+      },
+      // removeAnimation = (el) => {
+      //   el = angular.element(el);
+      //   let animationName = el.css('animation-name');
+      //   el.css('animation-name', 'none');
+      //   console.log('remove animation named ', animationName, ' from ', el);
+      //   return animationName;
+      // },
+      // applyAnimation = (el, animationName) => {
+      //   console.log('apply animation named ', animationName, ' to ', el);
+      //   el = angular.element(el);
+      //   el.css('animation-name', animationName);
+      // },
+      setAnimation = () => {
         craneEl.removeClass('che-loader-no-animation');
       },
       setNoAnimation = () => {
@@ -114,7 +198,6 @@ export class CheLoaderCrane {
 
         craneEl.addClass('step-' + newStep);
         cargoEl.addClass('layer-' + newStep);
-      }
+      };
   }
-
 }

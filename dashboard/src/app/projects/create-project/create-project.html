@@ -58,7 +58,8 @@
             <che-loader-crane che-all-steps="createProjectCtrl.getCreationSteps()"
                               che-exclude-steps="[createProjectCtrl.getCreationSteps().length-1]"
                               che-step="{{createProjectCtrl.getCurrentProgressStep()}}"
-                              che-switch-on-iteration="true">
+                              che-switch-on-iteration="true"
+                              che-in-progress="createProjectCtrl.isCreateProjectInProgress()">
             </che-loader-crane>
           </div>
           <div layout="column"
