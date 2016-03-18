@@ -42,6 +42,10 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
+import javax.ws.rs.core.UriBuilder;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -95,6 +99,12 @@ public class DockerInstanceProviderTest {
     @Mock
     private WorkspaceFolderPathProvider workspaceFolderPathProvider;
 
+    @Mock
+    private HttpURLConnection connection;
+
+    @Mock
+    private UriBuilder uriBuilder;
+
     private DockerInstanceProvider dockerInstanceProvider;
 
     @BeforeMethod
@@ -144,6 +154,28 @@ public class DockerInstanceProviderTest {
     // TODO add tests for instance snapshot removal
 
     @Test
+    public void shouldDeleteDockerImageFromRegistry() throws Exception {
+        String repository = "repo";
+        String tag = "latest";
+        String registry = "localhost:1234";
+        String digest = "hash:1234567890";
+        DockerInstanceKey instanceKey = new DockerInstanceKey(repository, tag, registry, digest);
+        URL url = new URL("");
+        URI uri = new URI("");
+
+        when(uriBuilder.path(anyString())).thenReturn(uriBuilder);
+        when(uriBuilder.build(anyString(), anyString())).thenReturn(uri);
+        when(uri.toURL()).thenReturn(url);
+        when(url.openConnection()).thenReturn(connection);
+        when(connection.getResponseCode()).thenReturn(202);
+
+        dockerInstanceProvider.removeInstanceSnapshot(instanceKey);
+
+        verify(uriBuilder).build(eq(repository), eq(digest));
+        verify(connection).setRequestMethod(eq("DELETE"));
+    }
+
+    @Test
     public void shouldBuildDockerfileOnInstanceCreationFromRecipe() throws Exception {
         String generatedContainerId = "genContainerId";
         doReturn(generatedContainerId).when(dockerInstanceProvider).generateContainerName(eq(WORKSPACE_ID), eq(DISPLAY_NAME));
@@ -164,10 +196,11 @@ public class DockerInstanceProviderTest {
     @Test
     public void shouldPullDockerImageOnInstanceCreationFromSnapshot() throws Exception {
         String repo = "repo";
+        String tag = "latest";
         String registry = "localhost:1234";
 
 
-        createInstanceFromSnapshot(repo, registry);
+        createInstanceFromSnapshot(repo, tag, registry);
 
 
         verify(dockerConnector).pull(eq(repo), eq(null), eq(registry), any(ProgressMonitor.class));
@@ -178,14 +211,15 @@ public class DockerInstanceProviderTest {
         String generatedContainerId = "genContainerId";
         doReturn(generatedContainerId).when(dockerInstanceProvider).generateContainerName(WORKSPACE_ID, DISPLAY_NAME);
         String repo = "repo1";
+        String tag = "tag1";
         String registry = "registry1";
 
 
-        createInstanceFromSnapshot(repo, registry);
+        createInstanceFromSnapshot(repo, tag, registry);
 
 
-        verify(dockerConnector).tag(eq(registry + "/" + repo), eq("eclipse-che/" + generatedContainerId), eq(null));
-        verify(dockerConnector).removeImage(eq(registry + "/" + repo), eq(false));
+        verify(dockerConnector).tag(eq(registry + "/" + repo + ":" + tag), eq("eclipse-che/" + generatedContainerId), eq(null));
+        verify(dockerConnector).removeImage(eq(registry + "/" + repo + ":" + tag), eq(false));
     }
 
     @Test
@@ -1581,8 +1615,8 @@ public class DockerInstanceProviderTest {
                                                     .build());
     }
 
-    private void createInstanceFromSnapshot(String repo, String registry) throws NotFoundException, MachineException {
-        createInstanceFromSnapshot(getMachineBuilder().build(), new DockerInstanceKey(repo, registry, "digest"));
+    private void createInstanceFromSnapshot(String repo, String tag, String registry) throws NotFoundException, MachineException {
+        createInstanceFromSnapshot(getMachineBuilder().build(), new DockerInstanceKey(repo, tag, registry, "digest"));
     }
 
     private void createInstanceFromRecipe(Machine machine) throws Exception {
@@ -1623,6 +1657,7 @@ public class DockerInstanceProviderTest {
 
     private void createInstanceFromSnapshot(Machine machine) throws NotFoundException, MachineException {
         dockerInstanceProvider.createInstance(new DockerInstanceKey("repo",
+                                                                    "tag",
                                                                     "registry",
                                                                     "digest"),
                                               machine,

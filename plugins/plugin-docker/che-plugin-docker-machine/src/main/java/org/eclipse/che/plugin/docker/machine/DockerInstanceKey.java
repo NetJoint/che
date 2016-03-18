@@ -30,8 +30,8 @@ public class DockerInstanceKey extends InstanceKeyImpl {
         super(key);
     }
 
-    public DockerInstanceKey(String repository, String registry, String digest) {
-        super(ImmutableMap.of(REPOSITORY, repository, REGISTRY, registry, DIGEST, digest));
+    public DockerInstanceKey(String repository, String tag, String registry, String digest) {
+        super(ImmutableMap.of(REPOSITORY, repository, TAG, tag, REGISTRY, registry, DIGEST, digest));
     }
 
     public String getRepository() {

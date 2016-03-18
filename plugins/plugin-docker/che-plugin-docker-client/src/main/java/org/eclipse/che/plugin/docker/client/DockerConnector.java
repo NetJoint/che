@@ -276,6 +276,21 @@ public class DockerConnector {
         doTag(image, repository, tag, dockerDaemonUri);
     }
 
+    /**
+     * Push docker image to the registry
+     *
+     * @param repository
+     *         full repository name to be applied to newly created image
+     * @param tag
+     *         tag of the image
+     * @param registry
+     *         registry url
+     * @param progressMonitor
+     *         ProgressMonitor for images creation process
+     * @return digest of just pushed image
+     * @throws IOException
+     * @throws InterruptedException
+     */
     public String push(String repository,
                        String tag,
                        String registry,
@@ -1001,6 +1016,13 @@ public class DockerConnector {
                 }
                 if (exceptionHolder.get() != null) {
                     throw new DockerException(exceptionHolder.get(), 500);
+                }
+                if (digestHolder.get() == null) {
+                    LOG.error("Docker image was successfully pushed to the registry: {} in {} repository with {} tag, but its digest didn't obtain",
+                              registry,
+                              repository,
+                              tag != null ? tag : "latest");
+                    throw new DockerException("Docker image was successfully pushed, but its digest didn't obtain", 500);
                 }
                 final IOException ioe = errorHolder.get();
                 if (ioe != null) {

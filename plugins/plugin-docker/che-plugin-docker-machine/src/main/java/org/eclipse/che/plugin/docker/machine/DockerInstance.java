@@ -208,7 +208,7 @@ public class DockerInstance extends AbstractInstance {
 
             docker.removeImage(registry + "/" + repository, false);
 
-            return new DockerInstanceKey(repository, registry, digest);
+            return new DockerInstanceKey(repository, null, registry, digest);
         } catch (IOException e) {
             throw new MachineException(e);
         } catch (InterruptedException e) {
