@@ -347,7 +347,7 @@ public class DockerInstanceProvider implements InstanceProvider {
         String registry = dockerInstanceKey.getRegistry();
         String repository = dockerInstanceKey.getRepository();
         if (registry == null || repository == null) {
-            LOG.error("Failed to remove instance snapshot: invalid instance key: {}", instanceKey.getFields().toString());
+            LOG.error("Failed to remove instance snapshot: invalid instance key: {}", instanceKey);
             throw new SnapshotException("Snapshot removing failed. Snapshot attributes are not valid");
         }
 

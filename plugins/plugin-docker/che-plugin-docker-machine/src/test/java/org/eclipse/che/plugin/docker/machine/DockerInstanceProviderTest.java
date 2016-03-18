@@ -164,14 +164,13 @@ public class DockerInstanceProviderTest {
     @Test
     public void shouldPullDockerImageOnInstanceCreationFromSnapshot() throws Exception {
         String repo = "repo";
-        String tag = "tag";
         String registry = "localhost:1234";
 
 
-        createInstanceFromSnapshot(repo, tag, registry);
+        createInstanceFromSnapshot(repo, registry);
 
 
-        verify(dockerConnector).pull(eq(repo), eq(tag), eq(registry), any(ProgressMonitor.class));
+        verify(dockerConnector).pull(eq(repo), eq(null), eq(registry), any(ProgressMonitor.class));
     }
 
     @Test
@@ -180,14 +179,13 @@ public class DockerInstanceProviderTest {
         doReturn(generatedContainerId).when(dockerInstanceProvider).generateContainerName(WORKSPACE_ID, DISPLAY_NAME);
         String repo = "repo1";
         String registry = "registry1";
-        String tag = "tag1";
 
 
-        createInstanceFromSnapshot(repo, tag, registry);
+        createInstanceFromSnapshot(repo, registry);
 
 
-        verify(dockerConnector).tag(eq(registry + "/" + repo + ":" + tag), eq("eclipse-che/" + generatedContainerId), eq(null));
-        verify(dockerConnector).removeImage(eq(registry + "/" + repo + ":" + tag), eq(false));
+        verify(dockerConnector).tag(eq(registry + "/" + repo), eq("eclipse-che/" + generatedContainerId), eq(null));
+        verify(dockerConnector).removeImage(eq(registry + "/" + repo), eq(false));
     }
 
     @Test
@@ -1583,8 +1581,8 @@ public class DockerInstanceProviderTest {
                                                     .build());
     }
 
-    private void createInstanceFromSnapshot(String repo, String tag, String registry) throws NotFoundException, MachineException {
-        createInstanceFromSnapshot(getMachineBuilder().build(), new DockerInstanceKey(repo, tag, "imageId", registry));
+    private void createInstanceFromSnapshot(String repo, String registry) throws NotFoundException, MachineException {
+        createInstanceFromSnapshot(getMachineBuilder().build(), new DockerInstanceKey(repo, registry, "digest"));
     }
 
     private void createInstanceFromRecipe(Machine machine) throws Exception {
@@ -1625,9 +1623,8 @@ public class DockerInstanceProviderTest {
 
     private void createInstanceFromSnapshot(Machine machine) throws NotFoundException, MachineException {
         dockerInstanceProvider.createInstance(new DockerInstanceKey("repo",
-                                                                    "tag",
-                                                                    "imageId",
-                                                                    "localhost:1234"),
+                                                                    "registry",
+                                                                    "digest"),
                                               machine,
                                               LineConsumer.DEV_NULL);
     }

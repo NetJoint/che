@@ -45,7 +45,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.String.format;
-import static org.eclipse.che.plugin.docker.machine.DockerInstanceKey.ID;
 
 /**
  * Docker implementation of {@link Instance}
