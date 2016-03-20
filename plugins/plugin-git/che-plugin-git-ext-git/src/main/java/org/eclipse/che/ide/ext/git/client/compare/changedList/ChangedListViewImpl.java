@@ -172,7 +172,6 @@ public class ChangedListViewImpl extends Window implements ChangedListView {
         }
 
         Map<String, Node> preparedNodes = new HashMap<>();
-        List<Node> nodesToView = new ArrayList<>();
         for (int i = getMaxNestedLevel(allFiles); i > 0; i--) {
             Map<String, List<Node>> currentNodes = new HashMap<>();
             for (String file : allFiles) {
@@ -203,21 +202,23 @@ public class ChangedListViewImpl extends Window implements ChangedListView {
             }
             List<String> currentPaths = new ArrayList<>(preparedNodes.keySet());
             for (String currentPath : currentPaths) {
-                List<Node> toAdd = new ArrayList<>();
+                List<Node> nodesToNest = new ArrayList<>();
                 for (String nestedItem : currentPaths) {
                     if (!currentPath.equals(nestedItem) && nestedItem.startsWith(currentPath)) {
-                        toAdd.add(preparedNodes.remove(nestedItem));
+                        nodesToNest.add(preparedNodes.remove(nestedItem));
                     }
                 }
-                if (!toAdd.isEmpty()) {
-                    toAdd.addAll(currentNodes.get(currentPath));
-                    preparedNodes.get(currentPath).setChildren(toAdd);
-                    nodesToView = toAdd;
+                if (!nodesToNest.isEmpty()) {
+                    nodesToNest.addAll(currentNodes.get(currentPath));
+                    if (currentPath.equals(allPaths.get(0))) {
+                        return nodesToNest;
+                    } else {
+                        preparedNodes.get(currentPath).setChildren(nodesToNest);
+                    }
                 }
             }
-            String s= "";
         }
-        return nodesToView;
+        return new ArrayList<>(preparedNodes.values());
     }
     
     private String getFolderName(List<String> paths, String comparedPath) {
